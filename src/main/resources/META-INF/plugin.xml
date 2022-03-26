@@ -29,6 +29,12 @@
     <![CDATA[
         <p>
             <div>
+                <h4>Version 1.0.1</h4>
+                <ul>
+                  <li>Fixed: Docs</li>
+              </ul>
+            </div>
+            <div>
                 <h4>Version 1.0.0</h4>
                 <ul>
                   <li>Initial release</li>
