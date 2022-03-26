@@ -1,10 +1,14 @@
 package net.twistedbytes.rider.plugins.unreal_genproj.actions;
 
+import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
-import com.intellij.openapi.project.DumbAwareAction;
+import com.intellij.openapi.progress.PerformInBackgroundOption;
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.ui.Messages;
@@ -21,34 +25,59 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class GenerateProjectFiles extends DumbAwareAction {
+public class GenerateProjectFiles extends AnAction {
 
     private static final Logger log = Logger.getInstance(GenerateProjectFiles.class);
 
     private static final Pattern RE_ENGINE_PATH = Pattern.compile("^(.+)/Engine/Source/UE[45]Editor\\.Target\\.cs$");
     private static final Pattern RE_UPROJECT = Pattern.compile("^(.+\\.uproject)$");
 
+    private boolean isBusy = false;
+
+    @Override public void update(@NotNull AnActionEvent e) {
+        super.update(e);
+        e.getPresentation().setEnabled(!isBusy);
+    }
+
     @Override public void actionPerformed(@NotNull AnActionEvent event) {
+        setBusy(true);
+
         log.info("Generating Visual Studio project files for UE project ...");
 
-        try {
-            Project project = getEventProject(event);
-            if (project == null) {
-                log.error("No project reference found.");
-                return;
-            }
+        Project project = getEventProject(event);
+        if (project == null) {
+            log.error("No project reference found.");
+            setBusy(false);
+            return;
+        }
 
+        ProgressManager.getInstance().run(new Task.Backgroundable(
+                project,
+                "Generating Visual Studio project files ...",
+                false,
+                PerformInBackgroundOption.ALWAYS_BACKGROUND) {
+            @Override public void run(@NotNull ProgressIndicator indicator) {
+                indicator.setIndeterminate(true);
+                runBlockingAction(project);
+            }
+        });
+    }
+
+    private void runBlockingAction(Project project) {
+        try {
             Module[] modules = ModuleManager.getInstance(project).getSortedModules();
             if (modules.length != 1) {
                 StringBuilder sb = new StringBuilder("More than one module found:");
                 for (int i = 0; i < modules.length; i++) {
                     Module module = modules[i];
-                    sb.append(String.format(" Module[%d] projectName<%s> projectFilePath<%s>",
+                    sb.append(String.format("Module[%d] projectName<%s> projectFilePath<%s>",
                             i,
                             module.getProject().getName(),
                             module.getProject().getProjectFilePath()));
                 }
                 log.error(sb.toString());
+
+                setBusy(false);
                 return;
             }
 
@@ -79,12 +108,14 @@ public class GenerateProjectFiles extends DumbAwareAction {
 
             if (engineRootPath == null) {
                 log.error("Could not determine engine root path.");
+                setBusy(false);
                 return;
             }
             log.info("Detected engine root path: " + engineRootPath);
 
             if (uproject == null) {
                 log.error("Could not determine uproject.");
+                setBusy(false);
                 return;
             }
             log.info("Detected uproject: " + uproject);
@@ -140,9 +171,16 @@ public class GenerateProjectFiles extends DumbAwareAction {
                 log.error(ex);
             }
 
+            setBusy(false);
+
         } catch (Exception e) {
+            setBusy(false);
             throw new RuntimeException("Failed to execute the command!", e);
         }
+    }
+
+    private void setBusy(boolean isBusy) {
+        this.isBusy = isBusy;
     }
 
 }

@@ -29,6 +29,15 @@
     <![CDATA[
         <p>
             <div>
+                <h4>Version 1.0.2</h4>
+                <ul>
+                  <li>Changed: The "Generate" button will be disabled during IDE startup phase.</li>
+                  <li>Changed: The "Generate" button will be disabled while generating project files.</li>
+                  <li>Fixed: Clicking the "Generate" button will no longer freeze the UI.</li>
+                  <li>Removed: Plugin deprecation for newer versions of Rider.</li>
+              </ul>
+            </div>
+            <div>
                 <h4>Version 1.0.1</h4>
                 <ul>
                   <li>Fixed: Docs</li>
