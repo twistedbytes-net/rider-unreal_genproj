@@ -1,8 +1,8 @@
 # Unreal GenProj
 
 ![Build](https://github.com/twistedbytes-net/rider-unreal_genproj/workflows/Build/badge.svg)
-[![Version](https://img.shields.io/jetbrains/plugin/v/18845.svg)](https://plugins.jetbrains.com/plugin/PLUGIN_ID)
-[![Downloads](https://img.shields.io/jetbrains/plugin/d/18845.svg)](https://plugins.jetbrains.com/plugin/PLUGIN_ID)
+[![Version](https://img.shields.io/jetbrains/plugin/v/18845.svg)](https://plugins.jetbrains.com/plugin/18845)
+[![Downloads](https://img.shields.io/jetbrains/plugin/d/18845.svg)](https://plugins.jetbrains.com/plugin/18845)
 
 <!-- Plugin description -->
 
