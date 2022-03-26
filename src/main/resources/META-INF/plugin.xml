@@ -1,0 +1,41 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <id>net.twistedbytes.rider.plugins.unreal_genproj</id>
+    <name>Unreal GenProj</name>
+    <vendor
+            email="support@twistedbytes.net"
+            url="https://twistedbytes.net"
+    >
+        TwistedBytes.net
+    </vendor>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <actions>
+        <action
+                id="net.twistedbytes.rider.plugins.unreal_genproj.actions.generateProjectFiles"
+                class="net.twistedbytes.rider.plugins.unreal_genproj.actions.GenerateProjectFiles"
+                description="Generate Visual Studio project files for UE project"
+                text="Generate Visual Studio project files for UE project"
+                icon="net.twistedbytes.rider.plugins.unreal_genproj.utils.PluginIcons.ActionGenerateProjectFiles"
+        >
+            <add-to-group group-id="MainToolBar" anchor="last"/>
+            <add-to-group group-id="NavBarToolBar" anchor="first"/>
+            <add-to-group group-id="RightToolbarSideGroup" anchor="first"/>
+        </action>
+    </actions>
+
+    <change-notes>
+    <![CDATA[
+        <p>
+            <div>
+                <h4>Version 1.0.0</h4>
+                <ul>
+                  <li>Initial release</li>
+              </ul>
+            </div>
+        </p>
+    ]]>
+    </change-notes>
+
+</idea-plugin>
