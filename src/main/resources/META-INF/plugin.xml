@@ -29,6 +29,12 @@
     <![CDATA[
         <p>
             <div>
+                <h4>Version 1.0.3</h4>
+                <ul>
+                  <li>Removed: Plugin deprecation for newer versions of Rider.</li>
+              </ul>
+            </div>
+            <div>
                 <h4>Version 1.0.2</h4>
                 <ul>
                   <li>Changed: The "Generate" button will be disabled during IDE startup phase.</li>
