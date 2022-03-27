@@ -29,7 +29,7 @@ intellij {
     pluginName.set(properties("pluginName"))
     version.set(properties("platformVersion"))
     type.set(properties("platformType"))
-    updateSinceUntilBuild.set(false)
+    updateSinceUntilBuild.set(false) // don't write information of current IntelliJ build into plugin.xml, instead use information from patchPluginXml
 
     // Plugin Dependencies. Uses `platformPlugins` property from the gradle.properties file.
     plugins.set(properties("platformPlugins").split(',').map(String::trim).filter(String::isNotEmpty))
@@ -68,7 +68,7 @@ tasks {
     patchPluginXml {
         version.set(properties("pluginVersion"))
         sinceBuild.set(properties("pluginSinceBuild"))
-        untilBuild.set(properties("pluginUntilBuild"))
+        // untilBuild(pluginUntilBuild) --> don't set "untilBuild" to allow new versions to use existing plugin without changes until breaking API changes are known
 
         // Extract the <!-- Plugin description --> section from README.md and provide for the plugin's manifest
         pluginDescription.set(
@@ -84,11 +84,15 @@ tasks {
         )
 
         // Get the latest available change notes from the changelog file
-//        changeNotes.set(provider {
-//            changelog.run {
-//                getOrNull(properties("pluginVersion")) ?: getLatest()
-//            }.toHTML()
-//        })
+        changeNotes.set(provider {
+            changelog.run {
+                getOrNull(properties("pluginVersion")) ?: getLatest()
+            }.toHTML()
+        })
+    }
+
+    runPluginVerifier {
+        ideVersions.set(properties("pluginVerifierIdeVersions").split(',').map(String::trim).filter(String::isNotEmpty))
     }
 
     // Configure UI tests plugin
@@ -112,6 +116,9 @@ tasks {
         // pluginVersion is based on the SemVer (https://semver.org) and supports pre-release labels, like 2.1.7-alpha.3
         // Specify pre-release label to publish the plugin in a custom Release Channel automatically. Read more:
         // https://plugins.jetbrains.com/docs/intellij/deployment.html#specifying-a-release-channel
-        channels.set(listOf(properties("pluginVersion").split('-').getOrElse(1) { "default" }.split('.').first()))
+//        channels.set(listOf(properties("pluginVersion").split('-').getOrElse(1) { "default" }.split('.').first()))
+
+        // if release is marked as a pre-release in the GitHub release, push it to EAP
+        channels.set(listOf(if ("true" == System.getenv("PRE_RELEASE")) "EAP" else "default"))
     }
 }

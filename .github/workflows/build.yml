@@ -56,15 +56,17 @@ jobs:
         run: |
           PROPERTIES="$(./gradlew properties --console=plain -q)"
           VERSION="$(echo "$PROPERTIES" | grep "^version:" | cut -f2- -d ' ')"
+          IDE_VERSIONS="$(echo "$PROPERTIES" | grep "^pluginVerifierIdeVersions:" | base64)"
           NAME="$(echo "$PROPERTIES" | grep "^pluginName:" | cut -f2- -d ' ')"
-          #CHANGELOG="$(./gradlew getChangelog --unreleased --no-header --console=plain -q)"
-          #CHANGELOG="${CHANGELOG//'%'/'%25'}"
-          #CHANGELOG="${CHANGELOG//$'\n'/'%0A'}"
-          #CHANGELOG="${CHANGELOG//$'\r'/'%0D'}"
+          CHANGELOG="$(./gradlew getChangelog --unreleased --no-header --console=plain -q)"
+          CHANGELOG="${CHANGELOG//'%'/'%25'}"
+          CHANGELOG="${CHANGELOG//$'\n'/'%0A'}"
+          CHANGELOG="${CHANGELOG//$'\r'/'%0D'}"
 
           echo "::set-output name=version::$VERSION"
+          echo "::set-output name=ideVersions::$IDE_VERSIONS"
           echo "::set-output name=name::$NAME"
-          #echo "::set-output name=changelog::$CHANGELOG"
+          echo "::set-output name=changelog::$CHANGELOG"
           echo "::set-output name=pluginVerifierHomeDir::~/.pluginVerifier"
 
           ./gradlew listProductsReleases # prepare list of IDEs for Plugin Verifier
@@ -81,28 +83,28 @@ jobs:
           name: tests-result
           path: ${{ github.workspace }}/build/reports/tests
 
-#      ## Cache Plugin Verifier IDEs
-#      - name: Setup Plugin Verifier IDEs Cache
-#        uses: actions/cache@v2.1.7
-#        with:
-#          path: ${{ steps.properties.outputs.pluginVerifierHomeDir }}/ides
-#          key: plugin-verifier-${{ hashFiles('build/listProductsReleases.txt') }}
-#
-#      ## Run Verify Plugin task and IntelliJ Plugin Verifier tool
-#      - name: Run Plugin Verification tasks
-#        run: ./gradlew runPluginVerifier -Pplugin.verifier.home.dir=${{ steps.properties.outputs.pluginVerifierHomeDir }}
-#
-#      ## Collect Plugin Verifier Result
-#      - name: Collect Plugin Verifier Result
-#        if: ${{ always() }}
-#        uses: actions/upload-artifact@v2
-#        with:
-#          name: pluginVerifier-result
-#          path: ${{ github.workspace }}/build/reports/pluginVerifier
+      ## Cache Plugin Verifier IDEs
+      - name: Setup Plugin Verifier IDEs Cache
+        uses: actions/cache@v2.1.7
+        with:
+          path: ${{ steps.properties.outputs.pluginVerifierHomeDir }}/ides
+          key: plugin-verifier-${{ hashFiles('build/listProductsReleases.txt') }}
 
-#      ## Run Qodana inspections
-#      - name: Qodana - Code Inspection
-#        uses: JetBrains/qodana-action@v4.2.5
+      ## Run Verify Plugin task and IntelliJ Plugin Verifier tool
+      - name: Run Plugin Verification tasks
+        run: ./gradlew runPluginVerifier -Pplugin.verifier.home.dir=${{ steps.properties.outputs.pluginVerifierHomeDir }}
+
+      ## Collect Plugin Verifier Result
+      - name: Collect Plugin Verifier Result
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: pluginVerifier-result
+          path: ${{ github.workspace }}/build/reports/pluginVerifier
+
+      ## Run Qodana inspections
+      - name: Qodana - Code Inspection
+        uses: JetBrains/qodana-action@v4.2.5
 
       ## Prepare plugin archive content for creating artifact
       - name: Prepare Plugin Artifact
@@ -126,8 +128,10 @@ jobs:
   ## If accepted and published, release workflow would be triggered
   releaseDraft:
     name: Release Draft
-    if: github.event_name != 'pull_request'
-    needs: build
+    # don't run on pull requests to avoid creating draft releases for pull requests
+    # only run on the main branch, to avoid cutting releases from feature branches
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+    needs: [build, verify]
     runs-on: ubuntu-latest
     steps:
 
